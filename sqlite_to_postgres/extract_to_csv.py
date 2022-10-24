@@ -1,21 +1,8 @@
 import logging
-import re
 import csv
 import sqlite3
 from contextlib import closing
-
-
-def file_rename(name, sufix):
-    m = re.search('(.+)(\..+$)', name)
-    new_name = m[1] + '_' + sufix + m[2]
-    return new_name
-
-
-def file_rename(name, sufix):
-    m = re.search('(.+)(\..+$)', name)
-    new_name = m[1] + '_' + sufix + m[2]
-    return new_name
-
+from utils import file_rename
 
 def extract(db_path: str, csv_filename: str, map_tables: tuple):
     sql = 'select {columns} from {table};'
