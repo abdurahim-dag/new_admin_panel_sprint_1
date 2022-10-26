@@ -1,3 +1,7 @@
+"""
+Модуль описывающий структуру таблиц
+целевой БД, посредством dataclass.
+"""
 from dataclasses import dataclass
 from uuid import UUID
 from pendulum import DateTime

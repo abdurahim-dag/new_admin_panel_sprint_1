@@ -1,11 +1,16 @@
+"""
+Основной модуль выгрузки, трансформирования и загрузки данных
+ из БД sqlite в БД Postgres.
+"""
 import os
 
-from utils import file_rename
+from dotenv import load_dotenv
+
 from extract import Extract
-from transform import Transform
 from load import Load
 from map_tables import map_tables
-from dotenv import load_dotenv
+from transform import Transform
+from utils import file_rename
 
 load_dotenv()
 db_sqlite = os.environ.get('SQLITE_DB_PATH', 'db.sqlite')
@@ -27,14 +32,13 @@ load = Load(conn_params, schema)
 
 for table in map_tables:
     table_name = table[0]
-    columns_source = table[1]
-    columns_target = table[2]
-    Dataclass = table[3]
+    dataclass_target = table[1]
+    dataclass_source = table[2]
 
     extracted_filename = file_rename(extract_filename, table_name)
-    extract.extract(table_name, columns_source, extracted_filename)
+    extract.extract(table_name, dataclass_source, extracted_filename)
 
-    filename = file_rename(upload_filename, table_name)
-    transform.transform(extracted_filename, filename, columns_target, Dataclass)
+    file_name = file_rename(upload_filename, table_name)
+    transform.transform(extracted_filename, file_name, dataclass_target)
 
-    load.upload(filename, table_name)
+    load.upload(file_name, table_name)

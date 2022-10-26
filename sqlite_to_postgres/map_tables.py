@@ -1,34 +1,36 @@
-from target_tables import FilmWork, Genre, Person, GenreFilmWork, PersonFilmWork
+"""
+Модуль описывающий посредством кортежей:
+первый вложенный кортеж - имена таблиц, совпадают с источником и целевой БД;
+второй вложенный кортеж - структура целевой БД(dataclass);
+третий вложенный кортеж - структура БД источника(dataclass).
+"""
+import tables_target
+import tables_source
 
 map_tables = (
     (
         'film_work',
-        ('id', 'title', 'type', 'description', 'rating', 'creation_date', 'created_at', 'updated_at',),
-        ('id', 'title', 'type', 'description', 'rating', 'creation_date', 'created', 'modified',),
-        FilmWork,
+        tables_target.FilmWork,
+        tables_source.FilmWork,
     ),
     (
         'genre',
-        ('id', 'name', 'description', 'created_at', 'updated_at'),
-        ('id', 'name', 'description', 'created', 'modified'),
-        Genre,
+        tables_target.Genre,
+        tables_source.Genre,
     ),
     (
         'person',
-        ('id', 'full_name', 'created_at', 'updated_at',),
-        ('id', 'full_name', 'created', 'modified',),
-        Person
+        tables_target.Person,
+        tables_source.Person,
     ),
     (
         'genre_film_work',
-        ('id', 'film_work_id', 'genre_id', 'created_at',),
-        ('id', 'film_work_id', 'genre_id', 'created',),
-        GenreFilmWork
+        tables_target.GenreFilmWork,
+        tables_source.GenreFilmWork,
     ),
     (
         'person_film_work',
-        ('id', 'film_work_id', 'person_id', 'role', 'created_at'),
-        ('id', 'film_work_id', 'person_id', 'role', 'created'),
-        PersonFilmWork
+        tables_target.PersonFilmWork,
+        tables_source.PersonFilmWork,
     )
 )
