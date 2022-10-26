@@ -1,20 +1,40 @@
-import sqlite3
+import os
 
-import psycopg2
-from psycopg2.extensions import connection as _connection
-from psycopg2.extras import DictCursor
+from utils import file_rename
+from extract import Extract
+from transform import Transform
+from load import Load
+from map_tables import map_tables
+from dotenv import load_dotenv
 
+load_dotenv()
+db_sqlite = os.environ.get('SQLITE_DB_PATH', 'db.sqlite')
+extract_filename = os.environ.get('EXTRACT_FILE_NAME', 'extract.csv')
+upload_filename = os.environ.get('UPLOAD_FILE_NAME', 'upload.csv')
+conn_params = {
+    'drivername': 'postgresql+psycopg2',
+    'database': os.environ.get('PG_DB_NAME', 'postgres'),
+    'username': os.environ.get('PG_USER', 'postgres'),
+    'password': os.environ.get('PG_PASSWORD', 'postgres'),
+    'host': os.environ.get('PG_HOST', 'localhost'),
+    'port': os.environ.get('PG_PORT', 'postgres'),
+}
+schema = os.environ.get('PG_SCHEMA', 'public')
 
-def load_from_sqlite(connection: sqlite3.Connection, pg_conn: _connection):
-    """Основной метод загрузки данных из SQLite в Postgres"""
-    # postgres_saver = PostgresSaver(pg_conn)
-    # sqlite_extractor = SQLiteExtractor(connection)
+extract = Extract(db_path=db_sqlite)
+transform = Transform()
+load = Load(conn_params, schema)
 
-    # data = sqlite_extractor.extract_movies()
-    # postgres_saver.save_all_data(data)
+for table in map_tables:
+    table_name = table[0]
+    columns_source = table[1]
+    columns_target = table[2]
+    Dataclass = table[3]
 
+    extracted_filename = file_rename(extract_filename, table_name)
+    extract.extract(table_name, columns_source, extracted_filename)
 
-if __name__ == '__main__':
-    dsl = {'dbname': 'movies_database', 'user': 'app', 'password': '123qwe', 'host': '127.0.0.1', 'port': 5432}
-    with sqlite3.connect('db.sqlite') as sqlite_conn, psycopg2.connect(**dsl, cursor_factory=DictCursor) as pg_conn:
-        load_from_sqlite(sqlite_conn, pg_conn)
+    filename = file_rename(upload_filename, table_name)
+    transform.transform(extracted_filename, filename, columns_target, Dataclass)
+
+    load.upload(filename, table_name)

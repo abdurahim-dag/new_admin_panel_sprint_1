@@ -1,4 +1,4 @@
-"id","film_work_id","person_id","role","created_at"
+"id","film_work_id","person_id","role","created"
 "2dba43a5-7e55-4bc8-993f-51c4d208bc8c","d4b209dc-88fe-4380-a43e-8966673f2fe0","232fd5ab-166f-47e4-afe1-28d3450721d5","director","2021-06-16 20:14:09.702729+00"
 "6852da17-aa75-4df9-aa5e-545055eab043","3b74bedf-0cba-40c3-8270-0e5024f8b9a4","038267d1-6ac4-4ca6-81dc-bab21466269b","writer","2021-06-16 20:14:09.702795+00"
 "a7146aa2-8eb2-4ed1-a474-633d0e153ff7","38b68a7a-86bf-4e02-82f7-2ec1fd2fa993","daf0d763-2dff-4cf1-a56b-cad0e76924c4","director","2021-06-16 20:14:09.702843+00"

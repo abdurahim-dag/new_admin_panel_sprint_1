@@ -56,4 +56,4 @@ CREATE INDEX concurrently if not exists film_work_rating_idx ON content.film_wor
 CREATE INDEX concurrently if not exists film_work_creation_date_idx ON content.film_work (creation_date);
 
 CREATE UNIQUE INDEX concurrently if not exists genre_film_work_unique_idx ON content.genre_film_work (genre_id, film_work_id);
-CREATE UNIQUE INDEX concurrently if not exists person_film_work_unique_idx ON content.person_film_work (person_id, film_work_id);
+CREATE UNIQUE INDEX concurrently if not exists person_film_work_unique_idx ON content.person_film_work (person_id, film_work_id, role);
