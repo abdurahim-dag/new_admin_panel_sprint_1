@@ -4,8 +4,8 @@
 второй вложенный кортеж - структура целевой БД(dataclass);
 третий вложенный кортеж - структура БД источника(dataclass).
 """
-import tables_target
-import tables_source
+import sqlite_to_postgres.tables_target as tables_target
+import sqlite_to_postgres.tables_source as tables_source
 
 map_tables = (
     (
