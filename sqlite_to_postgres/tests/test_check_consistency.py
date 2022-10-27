@@ -1,17 +1,28 @@
 import dataclasses
 import os
-from sqlite3 import connect, Connection
+import sqlite3
 from contextlib import closing
+from dataclasses import Field
 from pathlib import Path
 from pathlib import PurePath
-from typing import  Callable, Generator
+from typing import Callable, Generator, Union, Type, Any
+
 import psycopg2
 import pytest
 from dotenv import load_dotenv
 from pendulum import DateTime
 from pendulum import parse
 
+from sqlite_to_postgres import tables_target
 from sqlite_to_postgres.map_tables import map_tables
+
+TargeDataclasses = Union[
+    tables_target.FilmWork,
+    tables_target.Genre,
+    tables_target.Person,
+    tables_target.PersonFilmWork,
+    tables_target.GenreFilmWork,
+]
 
 
 class TestDB:
@@ -20,8 +31,10 @@ class TestDB:
     """
     @pytest.fixture
     def init(self) -> None:
-        """
-        Фикстура для инициализации начальных значений.
+        """Фикстура для инициализации начальных значений.
+
+        Raises:
+            FileExistsError: Если нет файла БД sqlite.
         """
         load_dotenv()
         conn_params = {
@@ -33,9 +46,11 @@ class TestDB:
         }
         # Проверка наличия файла БД sqlite выше в иерархии.
         schema = os.environ.get('PG_SCHEMA', 'public')
-        p = Path(PurePath(Path('.'),
-                          os.environ.get('SQLITE_DB_PATH', 'db.sqlite')))
-        if p.exists:
+        db_name = os.environ.get('SQLITE_DB_PATH', 'db.sqlite')
+        p = Path(
+            PurePath(Path('..'), db_name),
+         )
+        if p.exists():
             db_path = p.resolve()
         else:
             raise FileExistsError
@@ -43,18 +58,20 @@ class TestDB:
         self.conn_params = conn_params
         self.db_path = db_path
         self.map_tables = map_tables
-        self.sql_count = r'select count(*) from {table};'
-        self.sql_all = r'select {columns} from {table};'
-        self.sql_byid = r"select {columns} from {table} where id='{id}';"
+        self.sql_count = 'select count(*) from {table};'
+        self.sql_all = 'select {columns} from {table};'
+        self.sql_byid = "select {columns} from {table} where id='{id}';"
         self.schema = schema
 
     @pytest.fixture
-    def db_connect(self, init: Callable) -> Generator[int, float, str]:
-        """
-        Фиксутра, для нормального открытия и закрытия соединений в БД.
+    def db_connect(self, init: Callable) -> Generator[None, None, None]:
+        """Фиксутра, для нормального открытия и закрытия соединений в БД.
 
         Args:
             init(Callable): Выше стоящая фикстура инициализации.
+
+        Yields:
+            Generator[None]: Точка выхода для корректного завершения подключения.
         """
         with closing(psycopg2.connect(**self.conn_params)) as pg_conn:
             with closing(pg_conn.cursor()) as self.pg_curs:
@@ -63,45 +80,65 @@ class TestDB:
                         yield
 
 
-    def load_dataclass(self, dataclass, row):
-        columns = [field.name for field in dataclasses.fields(dataclass)]
-        kwargs = dict(zip(columns, row))
-        dc = dataclass(**kwargs)
-        return dc
+    def get_dc(
+            self,
+            row: tuple,
+            fields: tuple[Field, ...],
+            dc: Type[TargeDataclasses]) -> TargeDataclasses:
+        """Функция формирует Dataclass
 
+        Args:
+            row (tuple): Кортеж значений строки таблицы.
+            fields (list[Field]): Поля даткласса.
+            dc (Type[TargeDataclasses]): Даткласс таблицы.
 
-    def get_dc(self, row, fields, dc):
+        Returns:
+            Type[TargeDataclasses]: Заполненный датакласс.
+
+        """
         fields_list = [field.name for field in fields]
         kwargs = dict(zip(fields_list, row))
         return dc(**kwargs)
 
 
-    def test_tables_counts(self, db_connect):
-        check = {}
+    def test_tables_counts(self, db_connect: Callable) -> None:
+        """Тест совпадения количества строк в таблицах sqlite и PG.
+
+        Args:
+            db_connect(Callable): Фикстура настройки соединения БД.
+        """
+        # Словарь куда будем складывать ошибки.
+        check = []
         for table in self.map_tables:
+            # Запрашиваем количество строк таблицы PG.
             sql = self.sql_count.format(table=table[0])
             self.pg_curs.execute(sql)
             row = self.pg_curs.fetchone()
             count_pg = int(row[0])
 
+            # Запрашиваем количество строк таблицы sqlite.
             self.sqlite_curs.execute(sql)
             row = self.sqlite_curs.fetchone()
             count_sqlite = int(row[0])
-            check[table[0]] = (count_sqlite == count_pg), count_sqlite, count_pg
 
-        message=[]
-        asserted = True
-        for k, v in check.items():
-            if not v[0]:
-                message.append(f"{k}: sqlite({v[1]}) pg({v[2]})")
-            asserted = asserted & v[0]
-        assert asserted, '|'.join(message)
+            # Если количество строк не совпали - ошибку в список.
+            if count_sqlite != count_pg:
+                check.append(f"{table[0]}: PG({count_pg}) sqlite({count_sqlite})")
+        assert not check, '|'.join(check)
 
 
+    def get_typed_value(self, field: Field, dc: TargeDataclasses) -> Any:
+        """Функция привидения поля датакласса к установленному.
 
+        Args:
+            field (Field): Поле приводимого дата класса.
+            dc (TargeDataclasses): Датакласс.
 
-
-    def get_typed_value(self, field, dc):
+        Returns:
+            Any: Значения поля приведенное к
+            установленному типу
+            в датаклассе.
+        """
         value = getattr(dc, field.name)
         if bool(value):
             value = str(value)
@@ -111,43 +148,45 @@ class TestDB:
                 value = field.type(value)
         return value
 
-    def test_tables_row(self, db_connect):
+    def test_tables_row(self, db_connect: Callable) -> None:
+        """ Тест проверки на свопадение значений в строках
+            таблиц sqlite и PG.
+
+        Args:
+            db_connect (Callable): Фикстура предварительной
+                настройки БД.
+        """
         checks = []
         for table in self.map_tables:
             table_name = table[0]
-            dc_pg = table[1]
-            dc_sqlite = table[2]
-            fields_dc_pg = [field for field in dataclasses.fields(dc_pg)]
-            fields_dc_sqlite = [field for field in dataclasses.fields(dc_sqlite)]
+            dataclass_pg = table[1]
+            dataclass_sqlite = table[2]
+
+            # Заполняем строки со списком столбцов в таблицах.
+            fields_dc_pg = dataclasses.fields(dataclass_pg)
+            fields_dc_sqlite = dataclasses.fields(dataclass_sqlite)
             columns_pg = ','.join([field.name for field in fields_dc_pg])
             columns_sqlite = ','.join([field.name for field in fields_dc_sqlite])
 
+            # Проходим все записи в таблице sqlite.
             sql = self.sql_all.format(columns=columns_sqlite, table=table_name)
             self.sqlite_curs.execute(sql)
-
             for row_sqlite in self.sqlite_curs:
-                dc1 = self.get_dc(row_sqlite, fields_dc_pg, dc_pg)
+                dc_sqlite = self.get_dc(row_sqlite, fields_dc_pg, dataclass_pg)
 
+                # Находим строку с таким же id.
                 sql = self.sql_byid.format(columns=columns_pg, table=table_name, id=row_sqlite[0])
                 self.pg_curs.execute(sql)
                 row_pg = self.pg_curs.fetchone()
+                if not row_pg:
+                    checks.append(f"{table_name}({field.name}): pg(Not found), sqlit({value_sqlite})")
+                    continue
 
-                dc2 = self.get_dc(row_pg, fields_dc_pg, dc_pg)
-
+                # Заполняем датакласс из полученной строки и проверяем.
+                dc_pg = self.get_dc(row_pg, fields_dc_pg, dataclass_pg)
                 for field in fields_dc_pg:
-                    value_1 = self.get_typed_value(field, dc1)
-                    value_2 = self.get_typed_value(field, dc2)
-                    if value_1 != value_2:
-                        checks.append(f"{table_name}({field.name}): pg({value_1}), sqlit({value_2})")
-
-        assert len(checks) == 0, " | ".join(checks)
-
-
-
-# @pytest.mark.parametrize(('table_name','value1','value2'), db.tables_counts())
-# def test_tables_counts(table_name, value1, value2):
-#     assert value1 == value2
-
-# @pytest.mark.parametrize(('table_name','value1','value2'), db.tables_row())
-# def test_tables_counts(table_name, value1, value2):
-#     assert value1 == value2
+                    value_pg = self.get_typed_value(field, dc_pg)
+                    value_sqlite = self.get_typed_value(field, dc_sqlite)
+                    if value_pg != value_sqlite:
+                        checks.append(f"{table_name}({field.name}): pg({value_pg}), sqlit({value_sqlite})")
+        assert not checks, ' | '.join(checks)

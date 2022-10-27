@@ -1,21 +1,20 @@
-"""
-Модуль выгрузки даных из БД sqlite и заданной таблицы.
-"""
+"""Модуль выгрузки данных из БД sqlite и заданной таблицы."""
+
 import csv
 import dataclasses
 import sqlite3
 from contextlib import closing
+from typing import Union
 
 from logger import logger
-
+from tables_target import FilmWork, Genre, Person, PersonFilmWork, GenreFilmWork
 
 class Extract:
     """
     Класс выгружает данные из таблицы, как есть.
     """
     def __init__(self, db_path: str):
-        """
-        Конструктор класса.
+        """Конструктор класса.
 
         Args:
             db_path (str): Путь до БД sqlite.
@@ -24,9 +23,13 @@ class Extract:
         self.sql = 'select {columns} from {table};'
         self.sql_count = 'select count(*) from {table};'
 
-    def extract(self, table_name: str, dataclass: dataclasses.dataclass, csv_filename: str):
-        """
-        Функция выгрузки таблицы из БД в файл csv.
+    def extract(
+        self,
+        table_name: str,
+        dataclass: Union[FilmWork, Genre, Person, PersonFilmWork, GenreFilmWork],
+        csv_filename: str,
+    ) -> None:
+        """Функция выгрузки таблицы из БД в файл csv.
 
         Args:
             table_name (str): название таблицы.

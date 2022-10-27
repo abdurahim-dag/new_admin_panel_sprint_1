@@ -1,32 +1,30 @@
-"""
-Модуль загрузки csv файла в таблицу.
-"""
+"""Модуль загрузки csv файла в таблицу."""
+
 import logging
 from contextlib import closing
 
 import pandas as pd
+from logger import logger
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
-
 
 class Load:
     """
     Класс отвечающий за загрузку.
     """
 
-    def __init__(self, conn_params, schema):
-        """
-        Устанавливаем целевые параметры соединения и схему БД.
+    def __init__(self, conn_params: dict, schema: str) -> None:
+        """Устанавливаем целевые параметры соединения и схему БД.
+
         Args:
-            conn_params ():
-            schema ():
+            conn_params (dict): Параметры соединения с БД.
+            schema (str): Схема БД.
         """
         self.url = URL.create(**conn_params)
-        self.schema=schema
+        self.schema = schema
 
-    def upload(self, csv_file_name: str, table_name: str):
-        """
-        Загружаем пачками строки из файла в таблицу.
+    def upload(self, csv_file_name: str, table_name: str) -> None:
+        """Загружаем пачками строки из файла в таблицу.
 
         Args:
             csv_file_name (str): Загружаемый файл csv.
@@ -52,7 +50,8 @@ class Load:
                         if_exists='append',
                         index=False,
                         method='multi',
-                        schema=self.schema
+                        schema=self.schema,
                     )
                     logging.info(f"Number of rows is added: {num_rows}")
                     i += step + 1
+        logger.info(f"File {csv_file_name} completed load to table {table_name}")
