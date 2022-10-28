@@ -90,7 +90,6 @@ class FilmWork(UUIDMixin, TimeStampedMixin):
         verbose_name = _('Film work')
         verbose_name_plural = _('Film works')
 
-
     def __str__(self):
         return self.title
 
@@ -100,11 +99,11 @@ class PersonFilmWork(UUIDMixin):
     created = models.DateTimeField(auto_now_add=True)
 
     film_work = models.ForeignKey(
-        'FilmWork',
+        FilmWork,
         verbose_name=_('Film work'),
         on_delete=models.CASCADE)
     person = models.ForeignKey(
-        'Person',
+        Person,
         verbose_name=_('Person'),
         on_delete=models.CASCADE)
 
@@ -125,11 +124,11 @@ class GenreFilmWork(UUIDMixin):
     created = models.DateTimeField(auto_now_add=True)
 
     film_work = models.ForeignKey(
-        'FilmWork',
+        FilmWork,
         verbose_name=_('Film work'),
         on_delete=models.CASCADE)
     genre = models.ForeignKey(
-        'Genre',
+        Genre,
         verbose_name=_('Genre'),
         on_delete=models.CASCADE)
 
@@ -141,7 +140,6 @@ class GenreFilmWork(UUIDMixin):
         constraints = [
             models.UniqueConstraint(fields=['genre_id', 'film_work_id'], name='unique_genre_film_work')
         ]
-
 
     def __str__(self):
         return str(self.genre)
