@@ -13,7 +13,6 @@ class FilmWork:
     title: str
     type: str
     description: str = None
-    #Это менять
     rating: str = None
     creation_date: DateTime = None
     created: DateTime = None

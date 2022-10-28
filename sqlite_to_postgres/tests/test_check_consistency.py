@@ -46,17 +46,18 @@ class TestDB:
         }
         # Проверка наличия файла БД sqlite выше в иерархии.
         schema = os.environ.get('PG_SCHEMA', 'public')
+
         db_name = os.environ.get('SQLITE_DB_PATH', 'db.sqlite')
-        p = Path(
-            PurePath(Path('..'), db_name),
-         )
-        if p.exists():
-            db_path = p.resolve()
-        else:
+        data_dir = os.environ.get('DATA_DIR', '.data')
+        db_sqlite_path = Path(
+            PurePath(Path(data_dir)),
+            db_name,
+        )
+        if not db_sqlite_path.exists():
             raise FileExistsError
 
         self.conn_params = conn_params
-        self.db_path = db_path
+        self.db_path = str(db_sqlite_path)
         self.map_tables = map_tables
         self.sql_count = 'select count(*) from {table};'
         self.sql_all = 'select {columns} from {table};'

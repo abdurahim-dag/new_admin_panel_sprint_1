@@ -8,13 +8,19 @@
 import csv
 import dataclasses
 from contextlib import closing
+from pathlib import Path
 from typing import Union
 
 from pendulum import DateTime
 from pendulum import parse
 
 from logger import logger
-from tables_target import FilmWork, Genre, Person, PersonFilmWork, GenreFilmWork
+from tables_target import FilmWork
+from tables_target import Genre
+from tables_target import GenreFilmWork
+from tables_target import Person
+from tables_target import PersonFilmWork
+from utils import get_str_path
 
 
 class Transform:
@@ -22,6 +28,18 @@ class Transform:
     Класс, для организации проверок и
     переименования столбцов файла csv.
     """
+
+    def __init__(
+            self,
+            data_path: Path
+    ) -> None:
+        """Конструктор класса.
+
+        Args:
+            data_path (Path): Путь до папки, откуда брать данные.
+        """
+        self.data_path = data_path
+
     def transform(
         self,
         file_from: str,
@@ -36,12 +54,15 @@ class Transform:
             file_to (str): Название результирующего файла csv.
             dataclass (dataclass): Описание структуры целевой таблицы.
         """
+        # Генерим пути до файлов.
+        file_from_path = get_str_path(file_from, self.data_path)
+        file_to_path = get_str_path(file_to, self.data_path)
         # Получаем имена и типы столбцов.
         field_types = {field.name: field.type for field in dataclasses.fields(dataclass)}
         columns_to = field_types.keys()
-        with closing(open(file_from, 'r', encoding="utf-8", newline='')) as extracted_file:
+        with closing(open(file_from_path, 'r', encoding="utf-8", newline='')) as extracted_file:
             csv_reader = csv.reader(extracted_file, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
-            with closing(open(file_to, 'w', encoding="utf-8", newline='')) as upload_file:
+            with closing(open(file_to_path, 'w', encoding="utf-8", newline='')) as upload_file:
                 csv_writer = csv.writer(upload_file, delimiter=',', quoting=csv.QUOTE_NONNUMERIC)
                 # Заголовок исходного файла не интересует.
                 next(csv_reader, None)
@@ -62,8 +83,10 @@ class Transform:
                                     typo(value)
                     except (ValueError, TypeError) as e:
                         logger.info(
-                            f"Value error of id({dc.id}) field({field}) by value ({value}) from file {file_from} - {e}")
+                            "Value error of id(%s) field(%s) by value (%s) from file %s - %s",
+                            dc.id, field, value, file_from, e,
+                        )
                         continue
                     # Если проверка пройдена, то записываем.
                     csv_writer.writerow(row)
-                logger.info(f"File {file_from} completed transformation.")
+                logger.info("File %s completed transformation.", file_from)
