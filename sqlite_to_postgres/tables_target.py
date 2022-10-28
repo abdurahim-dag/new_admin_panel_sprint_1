@@ -4,6 +4,7 @@
 """
 from dataclasses import dataclass
 from uuid import UUID
+
 from pendulum import DateTime
 
 

@@ -5,7 +5,11 @@ from contextlib import closing
 from dataclasses import Field
 from pathlib import Path
 from pathlib import PurePath
-from typing import Callable, Generator, Union, Type, Any
+from typing import Any
+from typing import Callable
+from typing import Generator
+from typing import Type
+from typing import Union
 
 import psycopg2
 import pytest

@@ -1,5 +1,4 @@
 """Модуль загрузки csv файла в таблицу."""
-
 import logging
 from contextlib import closing
 from pathlib import Path

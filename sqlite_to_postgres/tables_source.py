@@ -3,7 +3,9 @@
 БД, посредством dataclass.
 """
 from dataclasses import dataclass
-from pendulum import DateTime, Date
+
+from pendulum import Date
+from pendulum import DateTime
 
 
 @dataclass(frozen=True)
