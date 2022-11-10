@@ -184,7 +184,7 @@ class TestDB:
                 self.pg_curs.execute(sql)
                 row_pg = self.pg_curs.fetchone()
                 if not row_pg:
-                    checks.append(f"{table_name}({field.name}): pg(Not found), sqlit({value_sqlite})")
+                    checks.append(f"{table_name}(id): pg(Not found), sqlite({row_sqlite[0]})")
                     continue
 
                 # Заполняем датакласс из полученной строки и проверяем.
@@ -193,5 +193,5 @@ class TestDB:
                     value_pg = self.get_typed_value(field, dc_pg)
                     value_sqlite = self.get_typed_value(field, dc_sqlite)
                     if value_pg != value_sqlite:
-                        checks.append(f"{table_name}({field.name}): pg({value_pg}), sqlit({value_sqlite})")
+                        checks.append(f"{table_name}({field.name}): pg({value_pg}), sqlite({value_sqlite})")
         assert not checks, ' | '.join(checks)

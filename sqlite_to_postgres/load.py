@@ -7,8 +7,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 
-from logger import logger
-from utils import get_str_path
+from sqlite_to_postgres.logger import logger
+from sqlite_to_postgres.utils import get_str_path
 
 
 class Load:

@@ -8,11 +8,11 @@ from pathlib import PurePath
 
 from dotenv import load_dotenv
 
-from extract import Extract
-from load import Load
-from map_tables import map_tables
-from transform import Transform
-from utils import file_rename
+from sqlite_to_postgres.extract import Extract
+from sqlite_to_postgres.load import Load
+from sqlite_to_postgres.map_tables import map_tables
+from sqlite_to_postgres.transform import Transform
+from sqlite_to_postgres.utils import file_rename
 
 if __name__ == "__main__":
     load_dotenv()

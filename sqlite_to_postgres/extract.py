@@ -6,13 +6,13 @@ from contextlib import closing
 from pathlib import Path
 from typing import Union
 
-from logger import logger
-from tables_target import FilmWork
-from tables_target import Genre
-from tables_target import GenreFilmWork
-from tables_target import Person
-from tables_target import PersonFilmWork
-from utils import get_str_path
+from sqlite_to_postgres.logger import logger
+from sqlite_to_postgres.tables_target import FilmWork
+from sqlite_to_postgres.tables_target import Genre
+from sqlite_to_postgres.tables_target import GenreFilmWork
+from sqlite_to_postgres.tables_target import Person
+from sqlite_to_postgres.tables_target import PersonFilmWork
+from sqlite_to_postgres.utils import get_str_path
 
 
 class Extract:
