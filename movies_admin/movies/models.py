@@ -65,6 +65,7 @@ class FilmWork(UUIDMixin, TimeStampedMixin):
     rating = models.FloatField(
         _('Rating'),
         blank=True,
+        null=True,
         validators=[MinValueValidator(0),
                     MaxValueValidator(100)],
         db_index=True
