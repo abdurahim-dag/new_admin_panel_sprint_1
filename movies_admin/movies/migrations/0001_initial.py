@@ -102,7 +102,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='personfilmwork',
-            constraint=models.UniqueConstraint(fields=('person_id', 'film_work_id'), name='unique_person_film_work'),
+            constraint=models.UniqueConstraint(fields=('person_id', 'film_work_id', 'role'), name='unique_person_film_work'),
         ),
         migrations.AddConstraint(
             model_name='genrefilmwork',
